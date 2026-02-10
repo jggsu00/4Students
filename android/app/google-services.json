@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "138407541480",
+    "project_id": "students-ff391",
+    "storage_bucket": "students-ff391.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138407541480:android:10b90a1d37b9cefa76a75d",
+        "android_client_info": {
+          "package_name": "com.company.fourstudents"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAG5Q5h0-Tdvpdx0-YiRxLPBRlokw8m1_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:138407541480:android:4b1c5a685a04e43a76a75d",
+        "android_client_info": {
+          "package_name": "com.example.fourstudents"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAG5Q5h0-Tdvpdx0-YiRxLPBRlokw8m1_o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
