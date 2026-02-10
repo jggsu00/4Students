@@ -40,9 +40,14 @@ class _TutorHomeDashboardState extends State<TutorHomeDashboard> {
   }
 }
 
-class TutorHomeContent extends StatelessWidget {
+class TutorHomeContent extends StatefulWidget {
   const TutorHomeContent({super.key});
 
+  @override
+  State<TutorHomeContent> createState() => _TutorHomeContentState();
+}
+
+class _TutorHomeContentState extends State<TutorHomeContent> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -130,7 +135,9 @@ class TutorHomeContent extends StatelessWidget {
                                 Expanded(
                                   child: ElevatedButton.icon(
                                     onPressed: () {
-                                      // TODO: Navigate to QR scanner
+                                      // Navigate to scan page using the bottom navigation
+                                      final state = context.findAncestorStateOfType<_TutorHomeDashboardState>();
+                                      state?._onItemTapped(2);
                                     },
                                     icon: const Icon(Icons.qr_code_scanner, size: 20),
                                     label: const Text('Scan QR'),
