@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:fourstudents/screens/student/student_attendance.dart';
 import '../shared/bottom_nav_bar.dart';
 import 'student_schedule_session.dart';
 import 'student_profile.dart';
 import '../shared/qr_test_screen.dart';
+import 'student_attendance.dart';
 
 class StudentHomeDashboard extends StatefulWidget {
   const StudentHomeDashboard({super.key});
@@ -26,7 +28,7 @@ class _StudentHomeDashboardState extends State<StudentHomeDashboard> {
       StudentHomeContent(onScanTap: () => _onItemTapped(2)),
       const StudentScheduleSession(),
       QrTestScreen(), // QR Test Screen integrated here
-      const Center(child: Text('History')), // Placeholder for history
+      const StudentAttendance(),
       const StudentProfile(),
     ];
 
