@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../screens/tutor/tutor_attendance_details.dart';
 
-class TutorAttendance extends StatelessWidget {
-  const TutorAttendance({super.key});
+class StudentAttendance extends StatelessWidget {
+  const StudentAttendance({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tutor Attendance'),
+        title: const Text('Student Attendance'),
         backgroundColor: const Color(0xFF0066FF),
         foregroundColor: Colors.white,
         automaticallyImplyLeading: false,
@@ -29,7 +28,7 @@ class TutorAttendance extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Session Statistics',
+                    'Attendance Summary',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -162,43 +161,43 @@ class TutorAttendance extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
                   _buildSessionCard(
-                    context,
                     'CSC 2720 - Data Structures',
+                    'Joseph Doughler',
                     'Session ID: 123456',
                     'October 25, 2025 2:00 PM - 3:00 PM',
                     'Room 476',
-                    '88%',
+                    '4:58PM',
                     Colors.green,
                   ),
                   const SizedBox(height: 15),
                   _buildSessionCard(
-                    context,
                     'CSC 4320 - Operating Systems',
+                    'Erika Dawn',
                     'Session ID: 321654',
                     'September 12, 2025 12:00 PM - 1:00 PM',
                     'Room 128',
-                    '71%',
-                    Colors.yellow,
-                  ),
-                  const SizedBox(height: 15),
-                  _buildSessionCard(
-                    context,
-                    'CSC 3320 - System Level Programming',
-                    'Session ID: 231546',
-                    'August 17, 2025 4:00 PM - 5:00 PM',
-                    'Room 333',
-                    '31%',
+                    'Did Not Check In',
                     Colors.red,
                   ),
                   const SizedBox(height: 15),
                   _buildSessionCard(
-                    context,
+                    'CSC 3320 - System Level Programming',
+                    'Zain Mohammed',
+                    'Session ID: 231546',
+                    'August 17, 2025 4:00 PM - 5:00 PM',
+                    'Room 333',
+                    '2:33PM',
+                    Colors.green,
+                  ),
+                  const SizedBox(height: 15),
+                  _buildSessionCard(
                     'CSC 2720 - Data Structures',
+                    'Mike OxLong',
                     'Session ID: 782183',
                     'April 12, 2025 11:00 AM - 12:00 PM',
                     'Room 105',
-                    '78%',
-                    Colors.yellow,
+                    '9.55AM',
+                    Colors.green,
                   ),
                 ],
               ),
@@ -211,99 +210,132 @@ class TutorAttendance extends StatelessWidget {
   }
 
   // Helper method to build individual session cards
-  Widget _buildSessionCard(BuildContext context,
+  Widget _buildSessionCard(
       String courseName,
+      String tutorName,
       String sessionId,
       String time,
       String room,
-      String status,
-      Color statusColor,) {
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                TutorAttendanceDetails(
-                  courseName: courseName,
-                  sessionId: sessionId,
-                  time: time,
-                  room: room,
-                  attendanceRate: status,
-                  statusColor: statusColor,
-                ),
+      String checkIn,
+      Color statusColor,
+      ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Course Name
+          Text(
+            courseName,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
           ),
-        );
-      },
-      child: Container( // <-- Container is the CHILD of InkWell
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              courseName,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+          const SizedBox(height: 8),
+          // Session ID and Status Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                sessionId,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  sessionId,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
+                child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                    Icon(
+                        statusColor == Colors.red ? Icons.close : Icons.check,
+                        size: 16,
+                        color: statusColor,
                     ),
+                    const SizedBox(width: 5),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+
+          // Tutor Name
+          Row(
+            children: [
+              const Icon(Icons.person_outlined, size: 16, color: Colors.grey),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  tutorName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    time,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+
+          // Time Row
+          Row(
+            children: [
+              const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                const Icon(Icons.room, size: 16, color: Colors.grey),
-                const SizedBox(width: 5),
-                Text(
-                  room,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+
+          // Room Row
+          Row(
+            children: [
+              const Icon(Icons.room, size: 16, color: Colors.grey),
+              const SizedBox(width: 5),
+              Text(
+                room,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+
+          Row(
+            children: [
+              const Icon(Icons.access_time, size: 16, color: Colors.grey),
+              const SizedBox(width: 5),
+              Text(
+                checkIn,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
