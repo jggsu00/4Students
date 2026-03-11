@@ -1,3 +1,5 @@
+// This screen will allow users to create a new account
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,14 +13,19 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  // Text controllers for input fields
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final TextEditingController _fullName = TextEditingController();
+
+  // Firebase Instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Selected role (default of student)
   String _selectedRole = 'student'; // default role
 
+  // Create a Firebase Auth account and Firestore user document
   Future<void> _register() async {
     if (_email.text.isEmpty || _password.text.isEmpty || _fullName.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -28,13 +35,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      // 1. Create the Firebase Auth account
+      // 1. Create the user's authentication credentials
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: _email.text.trim(),
         password: _password.text,
       );
 
-      // 2. Save user profile + role to Firestore
+      // 2. Save user profile information and role to Firestore
       await _firestore
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -47,6 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
+      // Registration sucessful message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration successful! Please log in.')),
       );
@@ -56,6 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
+      // If registration fails, show error message
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,9 +76,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey,
       appBar: AppBar(
-        backgroundColor: Colors.grey[850],
+        backgroundColor: Color(0xFF0047AB),
         foregroundColor: Colors.white,
         title: const Text(
           "REGISTER",
@@ -80,6 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Full Name Input
             TextField(
               controller: _fullName,
               decoration: const InputDecoration(
@@ -87,6 +96,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelStyle: TextStyle(color: Colors.black),
               ),
             ),
+
+            // Email Input
             TextField(
               controller: _email,
               decoration: const InputDecoration(
@@ -95,16 +106,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               keyboardType: TextInputType.emailAddress,
             ),
+
+            // Password Input
             TextField(
               controller: _password,
               decoration: const InputDecoration(
                 labelText: 'Password',
                 labelStyle: TextStyle(color: Colors.black),
               ),
-              obscureText: true,
+              obscureText: true, // Hide password characters
             ),
             const SizedBox(height: 20),
-            // Role selector
+            // Role selector dropdown
             Row(
               children: [
                 const Text(
@@ -135,6 +148,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
             const SizedBox(height: 20),
+            // Register Button
             ElevatedButton(
               onPressed: _register,
               style: ElevatedButton.styleFrom(

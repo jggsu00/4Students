@@ -223,7 +223,7 @@ class _TutorHomeContentState extends State<TutorHomeContent> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF0066FF),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Column(
@@ -234,7 +234,7 @@ class _TutorHomeContentState extends State<TutorHomeContent> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0047AB),
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 15),

@@ -194,7 +194,7 @@ class StudentHomeContent extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF0066FF),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Column(
@@ -205,7 +205,7 @@ class StudentHomeContent extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF0047AB),
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 15),
@@ -296,7 +296,7 @@ class StudentHomeContent extends StatelessWidget {
             style: const TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0047AB),
+              color: Color(0xFF0047AB), 
             ),
           ),
           const SizedBox(height: 5),
