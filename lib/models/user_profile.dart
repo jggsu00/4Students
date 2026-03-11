@@ -1,10 +1,13 @@
+// This will map the users collection in Firestore
+
 class UserProfile {
-  final String uid;
-  final String fullName;
-  final String email;
-  final String role; // 'student' or 'tutor'
+  final String uid;       // Firebase Auth user ID (unique identifier)
+  final String fullName;  // User's full name
+  final String email;     // User's email address
+  final String role;      // User's role (student or tutor)
   final String? password; // Hashed, stored securely
 
+  // Constructor for creating a UserProfile instance
   UserProfile({
     required this.uid,
     required this.fullName,
@@ -13,6 +16,7 @@ class UserProfile {
     this.password,
   });
 
+  // Create UserProfile from Firestore document data
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       uid: map['uid'] ?? '',
@@ -23,6 +27,7 @@ class UserProfile {
     );
   }
 
+  // Convert UserProfile to Map for storing in Firestore
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
