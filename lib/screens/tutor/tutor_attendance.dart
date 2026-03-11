@@ -8,9 +8,15 @@ class TutorAttendance extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tutor Attendance'),
-        backgroundColor: const Color(0xFF0066FF),
-        foregroundColor: Colors.white,
+        title: const Text(
+          'Tutor Attendance',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
