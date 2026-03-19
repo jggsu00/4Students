@@ -3,7 +3,7 @@ import 'package:fourstudents/screens/student/student_attendance.dart';
 import '../shared/bottom_nav_bar.dart';
 import 'student_schedule_session.dart';
 import 'student_profile.dart';
-import '../shared/qr_test_screen.dart';
+import 'student_scan_qr.dart';
 import 'student_attendance.dart';
 
 class StudentHomeDashboard extends StatefulWidget {
@@ -27,7 +27,7 @@ class _StudentHomeDashboardState extends State<StudentHomeDashboard> {
     final List<Widget> _screens = [
       StudentHomeContent(onScanTap: () => _onItemTapped(2)),
       const StudentScheduleSession(),
-      QrTestScreen(), // QR Test Screen integrated here
+      const StudentScanQR(),
       const StudentAttendance(),
       const StudentProfile(),
     ];
@@ -56,7 +56,7 @@ class StudentHomeContent extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF0047AB), // Royal blue
+            Color(0xFF0047AB),
             Color(0xFF0047AB),
           ],
         ),
@@ -64,7 +64,6 @@ class StudentHomeContent extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -98,8 +97,6 @@ class StudentHomeContent extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Main content area
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -110,7 +107,6 @@ class StudentHomeContent extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Quick Check-In Card
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(15),
@@ -152,8 +148,6 @@ class StudentHomeContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Upcoming Sessions Card
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(15),
@@ -188,8 +182,6 @@ class StudentHomeContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Attendance Stats Card
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(15),
@@ -285,7 +277,7 @@ class StudentHomeContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: isSecondary ? Colors.white : Colors.white,
+        color: Colors.white,
         border: Border.all(color: const Color(0xFF0047AB), width: 2),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -296,7 +288,7 @@ class StudentHomeContent extends StatelessWidget {
             style: const TextStyle(
               fontSize: 36,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF0047AB), 
+              color: Color(0xFF0047AB),
             ),
           ),
           const SizedBox(height: 5),

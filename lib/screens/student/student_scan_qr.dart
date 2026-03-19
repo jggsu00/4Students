@@ -14,7 +14,6 @@ class StudentScanQR extends StatefulWidget {
 class _StudentScanQRState extends State<StudentScanQR> {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
-
   bool _scanned = false; // prevents scanning twice
 
   Future<void> _onQRDetected(String sessionId) async {

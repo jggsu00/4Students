@@ -11,7 +11,7 @@ class Session {
   final int currentStudents;  // Number of student checked in
   final int maxStudents;      // Maximum number students in one session
 
- // Costructor for creating a session instance
+  // Costructor for creating a session instance
   Session({
     required this.id,
     required this.courseCode,
@@ -56,10 +56,10 @@ class Session {
 
   // Helper method to check if session is full
   bool get isFull => currentStudents >= maxStudents && maxStudents > 0;
-  
+
   // Helper method to check if session is active
   bool get isActive => status == 'active';
-  
+
   // Helper method to check if session is in the future
   bool get isUpcoming => status == 'upcoming' && dateTime.isAfter(DateTime.now());
 }
