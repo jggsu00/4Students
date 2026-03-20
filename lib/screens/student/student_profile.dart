@@ -62,20 +62,20 @@ class _StudentProfileState extends State<StudentProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF0047AB), // ← fixed
         elevation: 0,
-        automaticallyImplyLeading: false, // Remove back button
+        automaticallyImplyLeading: false,
         title: const Text(
           'Profile',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white, // ← fixed to white so it's visible
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
       ),
       body: Container(
-        color: Colors.white,
+        color: const Color(0xFF0047AB), // ← fixed
         child: Column(
           children: [
             Expanded(
@@ -145,11 +145,10 @@ class _StudentProfileState extends State<StudentProfile> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0047AB),
+                              color: Colors.white, // ← fixed
                             ),
                           ),
                           const SizedBox(height: 15),
-
                           _buildInfoCard(
                             icon: Icons.person,
                             label: 'Full Name',
@@ -157,7 +156,6 @@ class _StudentProfileState extends State<StudentProfile> {
                             onEdit: () => _editField('Full Name', fullName),
                           ),
                           const SizedBox(height: 12),
-
                           _buildInfoCard(
                             icon: Icons.email,
                             label: 'Email',
@@ -165,7 +163,6 @@ class _StudentProfileState extends State<StudentProfile> {
                             onEdit: () => _editField('Email', email),
                           ),
                           const SizedBox(height: 12),
-
                           _buildPasswordCard(),
                         ],
                       ),
@@ -198,7 +195,7 @@ class _StudentProfileState extends State<StudentProfile> {
                               MaterialPageRoute(
                                 builder: (_) => const RoleSelector(),
                               ),
-                              (route) => false,
+                                  (route) => false,
                             );
                           },
                           child: const Text(
@@ -243,7 +240,7 @@ class _StudentProfileState extends State<StudentProfile> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFF0047AB),
+        color: const Color(0xFF0066FF), // ← slightly lighter to stand out from bg
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -286,7 +283,7 @@ class _StudentProfileState extends State<StudentProfile> {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: const Color(0xFF0047AB),
+        color: const Color(0xFF0066FF), // ← slightly lighter to stand out from bg
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
