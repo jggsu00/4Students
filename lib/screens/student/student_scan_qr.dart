@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'student_schedule_session.dart';
 
 class StudentScanQR extends StatefulWidget {
-  const StudentScanQR({super.key});
+  final VoidCallback onBack;
+  const StudentScanQR({super.key, required this.onBack});
 
   @override
   State<StudentScanQR> createState() => _StudentScanQRState();
@@ -14,7 +15,7 @@ class StudentScanQR extends StatefulWidget {
 class _StudentScanQRState extends State<StudentScanQR> {
   final _firestore = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
-  bool _scanned = false; // prevents scanning twice
+  bool _scanned = false;
 
   Future<void> _onQRDetected(String sessionId) async {
     if (_scanned) return;
@@ -23,7 +24,6 @@ class _StudentScanQRState extends State<StudentScanQR> {
     final uid = _auth.currentUser!.uid;
 
     try {
-      // Check if session exists in Firestore
       final sessionRef = _firestore.collection('sessions').doc(sessionId);
       final sessionSnap = await sessionRef.get();
 
@@ -33,14 +33,12 @@ class _StudentScanQRState extends State<StudentScanQR> {
         return;
       }
 
-      // Mark student attendance in the session
       await sessionRef.update({
         'students': FieldValue.arrayUnion([uid]),
       });
 
       if (!mounted) return;
 
-      // Go to session schedule page after successful scan
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -61,14 +59,18 @@ class _StudentScanQRState extends State<StudentScanQR> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.grey[850],
+        backgroundColor: const Color(0xFF0047AB),
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: widget.onBack,
+        ),
         title: const Text('Scan QR Code',
             style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Stack(
         children: [
-          // Camera view
           MobileScanner(
             onDetect: (capture) {
               final barcode = capture.barcodes.first;
@@ -78,8 +80,6 @@ class _StudentScanQRState extends State<StudentScanQR> {
               }
             },
           ),
-
-          // Scan box overlay
           Center(
             child: Container(
               width: 250,
@@ -90,8 +90,6 @@ class _StudentScanQRState extends State<StudentScanQR> {
               ),
             ),
           ),
-
-          // Instructions at bottom
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

@@ -27,7 +27,7 @@ class _StudentHomeDashboardState extends State<StudentHomeDashboard> {
     final List<Widget> _screens = [
       StudentHomeContent(onScanTap: () => _onItemTapped(2)),
       const StudentScheduleSession(),
-      const StudentScanQR(),
+      StudentScanQR(onBack: () => _onItemTapped(0)),
       const StudentAttendance(),
       const StudentProfile(),
     ];
