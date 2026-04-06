@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../login_screen.dart';
 import '../tutor/tutor_session_enrollments.dart';
 
 class QrTestScreen extends StatefulWidget {
@@ -199,15 +198,6 @@ class _QrTestScreenState extends State<QrTestScreen>
     });
   }
 
-  Future<void> _signOut(BuildContext context) async {
-    await _auth.signOut();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -217,12 +207,6 @@ class _QrTestScreenState extends State<QrTestScreen>
         title: const Text('QR Code Generator', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
         ),
         automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _signOut(context),
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -285,7 +269,10 @@ class _QrTestScreenState extends State<QrTestScreen>
             onSessionChanged: (id, label) => _selectSession(id, label),
           ),
           _SessionsTab(tutorId: _auth.currentUser!.uid),
-          _ConfirmationTab(sessionId: _selectedSessionId),
+          _ConfirmationTab(
+            sessionId: _selectedSessionId,
+            sessions: _sessions,
+          ),
         ],
       ),
     );
@@ -343,7 +330,7 @@ class _QrCodeTab extends StatelessWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // ── Session switcher dropdown ────────────────────────────
+            // ── Session switcher dropdown ──
             if (sessions.length > 1)
               Container(
                 margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -793,9 +780,37 @@ class _SessionCard extends StatelessWidget {
 }
 
 
-class _ConfirmationTab extends StatelessWidget {
+class _ConfirmationTab extends StatefulWidget {
   final String? sessionId;
-  const _ConfirmationTab({required this.sessionId});
+  final List<Map<String, dynamic>> sessions;
+
+  const _ConfirmationTab({
+    required this.sessionId,
+    required this.sessions,
+  });
+
+  @override
+  State<_ConfirmationTab> createState() => _ConfirmationTabState();
+}
+
+class _ConfirmationTabState extends State<_ConfirmationTab> {
+  String? _selectedSessionId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSessionId = widget.sessionId;
+  }
+
+  @override
+  void didUpdateWidget(_ConfirmationTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // If parent's selected session changes and we haven't picked one yet, sync
+    if (oldWidget.sessionId != widget.sessionId &&
+        _selectedSessionId == null) {
+      _selectedSessionId = widget.sessionId;
+    }
+  }
 
   Future<void> _resolve(String docId, bool confirm) async {
     await FirebaseFirestore.instance
@@ -807,14 +822,29 @@ class _ConfirmationTab extends StatelessWidget {
     });
   }
 
+  String _buildLabel(Map<String, dynamic> s) {
+    final code = s['courseCode'] ?? '';
+    final iso = s['dateTime'] ?? '';
+    try {
+      final dt = DateTime.parse(iso);
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '$code  •  ${months[dt.month - 1]} ${dt.day}';
+    } catch (_) {
+      return code;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (sessionId == null) {
+    if (widget.sessions.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32),
           child: Text(
-            'No active session.\nCreate and start a session to see check-in requests.',
+            'No active sessions.\nCreate and start a session to see check-in requests.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey, fontSize: 15),
           ),
@@ -822,143 +852,157 @@ class _ConfirmationTab extends StatelessWidget {
       );
     }
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('checkins')
-          .where('sessionId', isEqualTo: sessionId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF0047AB)));
-        }
+    // Make sure selectedSessionId is valid
+    final validId = widget.sessions.any((s) => s['id'] == _selectedSessionId)
+        ? _selectedSessionId
+        : widget.sessions.first['id'] as String;
 
-        final docs = (snapshot.data?.docs ?? [])
-          ..sort((a, b) {
-            final aT = (a.data() as Map)['scannedAt'];
-            final bT = (b.data() as Map)['scannedAt'];
-            if (aT == null || bT == null) return 0;
-            return (aT as Timestamp)
-                .compareTo(bT as Timestamp);
-          });
-
-        final pending = docs
-            .where((d) => (d['status'] as String) == 'pending')
-            .toList();
-        final resolved = docs
-            .where((d) => (d['status'] as String) != 'pending')
-            .toList();
-
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Session banner
-            FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('sessions')
-                  .doc(sessionId)
-                  .get(),
-              builder: (context, snap) {
-                final d = snap.hasData
-                    ? (snap.data!.data() as Map<String, dynamic>? ?? {})
-                    : <String, dynamic>{};
-                return Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0047AB).withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(10),
+    return Column(
+      children: [
+        // ── Session dropdown ──
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0047AB).withOpacity(0.07),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+                color: const Color(0xFF0047AB).withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.swap_horiz,
+                  color: Color(0xFF0047AB), size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: validId,
+                    items: widget.sessions.map((s) {
+                      final id = s['id'] as String;
+                      return DropdownMenuItem(
+                        value: id,
+                        child: Text(
+                          _buildLabel(s),
+                          style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF0047AB),
+                              fontWeight: FontWeight.w600),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (id) {
+                      if (id != null) {
+                        setState(() => _selectedSessionId = id);
+                      }
+                    },
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('CURRENT SESSION',
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.grey,
-                              letterSpacing: 1.1)),
-                      const SizedBox(height: 4),
-                      Text(
-                        d.isEmpty
-                            ? '...'
-                            : '${d['courseCode'] ?? ''} – ${d['courseName'] ?? ''}',
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0047AB)),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            if (pending.isNotEmpty) ...[
-              Row(children: [
-                Text('Awaiting Confirmation',
-                    style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.orange.shade700)),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text('${pending.length}',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade700)),
-                ),
-              ]),
-              const SizedBox(height: 10),
-              ...pending.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return _PendingCard(
-                  studentId: data['studentId'] ?? '',
-                  scannedAt: data['scannedAt'],
-                  onConfirm: () => _resolve(doc.id, true),
-                  onDeny: () => _resolve(doc.id, false),
-                );
-              }),
-              const SizedBox(height: 24),
-            ],
-
-            if (resolved.isNotEmpty) ...[
-              const Text('Resolved',
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.grey)),
-              const SizedBox(height: 10),
-              ...resolved.map((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return _ResolvedCard(
-                  studentId: data['studentId'] ?? '',
-                  scannedAt: data['scannedAt'],
-                  status: data['status'] ?? 'denied',
-                );
-              }),
-            ],
-
-            if (docs.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.only(top: 60),
-                  child: Text('No check-in requests yet.',
-                      style: TextStyle(color: Colors.grey, fontSize: 15)),
                 ),
               ),
-          ],
-        );
-      },
+            ],
+          ),
+        ),
+
+        // ── Checkin list for selected session ──
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('checkins')
+                .where('sessionId', isEqualTo: validId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                    child: CircularProgressIndicator(
+                        color: Color(0xFF0047AB)));
+              }
+
+              final docs = (snapshot.data?.docs ?? [])
+                ..sort((a, b) {
+                  final aT = (a.data() as Map)['scannedAt'];
+                  final bT = (b.data() as Map)['scannedAt'];
+                  if (aT == null || bT == null) return 0;
+                  return (aT as Timestamp).compareTo(bT as Timestamp);
+                });
+
+              final pending = docs
+                  .where((d) => (d['status'] as String) == 'pending')
+                  .toList();
+              final resolved = docs
+                  .where((d) => (d['status'] as String) != 'pending')
+                  .toList();
+
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (pending.isNotEmpty) ...[
+                    Row(children: [
+                      Text('Awaiting Confirmation',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.orange.shade700)),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text('${pending.length}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange.shade700)),
+                      ),
+                    ]),
+                    const SizedBox(height: 10),
+                    ...pending.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return _PendingCard(
+                        studentId: data['studentId'] ?? '',
+                        scannedAt: data['scannedAt'],
+                        onConfirm: () => _resolve(doc.id, true),
+                        onDeny: () => _resolve(doc.id, false),
+                      );
+                    }),
+                    const SizedBox(height: 24),
+                  ],
+
+                  if (resolved.isNotEmpty) ...[
+                    const Text('Resolved',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey)),
+                    const SizedBox(height: 10),
+                    ...resolved.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      return _ResolvedCard(
+                        studentId: data['studentId'] ?? '',
+                        scannedAt: data['scannedAt'],
+                        status: data['status'] ?? 'denied',
+                      );
+                    }),
+                  ],
+
+                  if (docs.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 60),
+                        child: Text('No check-in requests yet.',
+                            style: TextStyle(
+                                color: Colors.grey, fontSize: 15)),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
