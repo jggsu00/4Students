@@ -13,33 +13,79 @@ class StudentScanQR extends StatefulWidget {
 }
 
 class _StudentScanQRState extends State<StudentScanQR> {
-  final _firestore = FirebaseFirestore.instance;
+  final _db = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
   bool _scanned = false;
 
-  Future<void> _onQRDetected(String sessionId) async {
+  Future<void> _onQRDetected(String qrCodeId) async {
     if (_scanned) return;
     setState(() => _scanned = true);
 
     final uid = _auth.currentUser!.uid;
 
     try {
-      final sessionRef = _firestore.collection('sessions').doc(sessionId);
-      final sessionSnap = await sessionRef.get();
+      // 1. Look up the QR code doc to get the sessionId
+      final qrDoc = await _db.collection('qrCodes').doc(qrCodeId).get();
 
-      if (!sessionSnap.exists) {
-        _showMessage('Invalid QR code. Session not found.');
+      if (!qrDoc.exists) {
+        _showMessage('Invalid QR code.');
         setState(() => _scanned = false);
         return;
       }
 
-      await sessionRef.update({
-        'students': FieldValue.arrayUnion([uid]),
+// Check expiry
+      final expiresAt = (qrDoc['expiresAt'] as Timestamp).toDate();
+      if (DateTime.now().isAfter(expiresAt)) {
+        _showMessage('This QR code has expired.');
+        setState(() => _scanned = false);
+        return;
+      }
+
+      final sessionId = qrDoc['sessionId'] as String;
+
+      // 2. Check if student already has a checkin for this session
+      final existing = await _db
+          .collection('checkins')
+          .where('studentId', isEqualTo: uid)
+          .where('sessionId', isEqualTo: sessionId)
+          .limit(1)
+          .get();
+
+      if (existing.docs.isNotEmpty) {
+        final status = existing.docs.first['status'];
+        if (status == 'confirmed') {
+          _showMessage('You are already checked in for this session.');
+        } else if (status == 'pending') {
+          _showMessage('Your check-in is pending tutor confirmation.');
+        } else {
+          _showMessage('Your check-in was denied. Please speak to your tutor.');
+        }
+        setState(() => _scanned = false);
+        return;
+      }
+
+      // 3. Write a pending checkin — tutor will confirm/deny
+      await _db.collection('checkins').add({
+        'studentId': uid,
+        'sessionId': sessionId,
+        'qrCodeId': qrCodeId,
+        'status': 'pending',
+        'scannedAt': Timestamp.now(),
       });
 
       if (!mounted) return;
 
-      Navigator.push(
+      // 4. Show success and go back to schedule screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Check-in request sent! Waiting for tutor confirmation.'),
+          backgroundColor: Color(0xFF0047AB),
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => const StudentScheduleSession(),
@@ -52,7 +98,9 @@ class _StudentScanQRState extends State<StudentScanQR> {
   }
 
   void _showMessage(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
