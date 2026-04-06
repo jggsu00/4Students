@@ -1,14 +1,17 @@
-class Session {
-  final String id;
-  final String courseCode;
-  final String courseName;
-  final String tutor;
-  final DateTime dateTime;
-  final String room;
-  final String status; // 'active', 'upcoming', 'completed'
-  final int currentStudents;
-  final int maxStudents;
+// This will map to the sessions collection in Firestore, which is used to for tutoring sessions
 
+class Session {
+  final String id;            // Unique session identifier
+  final String courseCode;    // Course Number like CSC 4352
+  final String courseName;    // Course Name
+  final String tutor;         // Tutor's name/ID - person that is hosting the session
+  final DateTime dateTime;    // Date and time of session
+  final String room;          // Room Location
+  final String status;        // Status of session (active, upcoming, completed)
+  final int currentStudents;  // Number of student checked in
+  final int maxStudents;      // Maximum number students in one session
+
+  // Costructor for creating a session instance
   Session({
     required this.id,
     required this.courseCode,
@@ -21,6 +24,7 @@ class Session {
     this.maxStudents = 0,
   });
 
+  // Create session from Firestore document data
   factory Session.fromMap(Map<String, dynamic> map) {
     return Session(
       id: map['id'] ?? '',
@@ -35,6 +39,7 @@ class Session {
     );
   }
 
+  // Covert session to Map for storing in Firestore
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -48,4 +53,13 @@ class Session {
       'maxStudents': maxStudents,
     };
   }
+
+  // Helper method to check if session is full
+  bool get isFull => currentStudents >= maxStudents && maxStudents > 0;
+
+  // Helper method to check if session is active
+  bool get isActive => status == 'active';
+
+  // Helper method to check if session is in the future
+  bool get isUpcoming => status == 'upcoming' && dateTime.isAfter(DateTime.now());
 }

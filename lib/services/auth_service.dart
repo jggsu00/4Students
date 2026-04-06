@@ -1,10 +1,14 @@
+// This will manage user authentication and the user profile data
+
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_profile.dart';
 
 class AuthService extends ChangeNotifier {
+  // Firebase authentication instance
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Firestore database instance
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;
