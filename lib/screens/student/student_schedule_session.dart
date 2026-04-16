@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/notifications_service.dart';
 
 class StudentScheduleSession extends StatefulWidget {
   const StudentScheduleSession({super.key});
@@ -28,8 +29,7 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
-      final hour =
-      dt.hour > 12 ? dt.hour - 12 : dt.hour == 0 ? 12 : dt.hour;
+      final hour = dt.hour > 12 ? dt.hour - 12 : dt.hour == 0 ? 12 : dt.hour;
       final ampm = dt.hour >= 12 ? 'PM' : 'AM';
       final min = dt.minute.toString().padLeft(2, '0');
       return '${months[dt.month - 1]} ${dt.day}, ${dt.year}  •  $hour:$min $ampm';
@@ -62,8 +62,7 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
     final course =
     '${data['courseCode'] ?? ''} ${data['courseName'] ?? ''}'.toLowerCase();
     final room = (data['room'] ?? '').toString().toLowerCase();
-    final tutorName =
-    (_tutorNameCache[data['tutorId']] ?? '').toLowerCase();
+    final tutorName = (_tutorNameCache[data['tutorId']] ?? '').toLowerCase();
     return course.contains(q) || room.contains(q) || tutorName.contains(q);
   }
 
@@ -76,13 +75,15 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
         backgroundColor: Color(0xFF0047AB),
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text('Available Sessions', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Available Sessions',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold)),
       ),
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Search bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: TextField(
@@ -94,8 +95,7 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                 const Icon(Icons.search, color: Color(0xFF0047AB)),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                  icon:
-                  const Icon(Icons.clear, color: Colors.grey),
+                  icon: const Icon(Icons.clear, color: Colors.grey),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -104,22 +104,19 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                     : null,
                 filled: true,
                 fillColor: const Color(0xFF0047AB).withOpacity(0.06),
-                contentPadding:
-                const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: Color(0xFF0047AB), width: 1.5),
+                  borderSide:
+                  const BorderSide(color: Color(0xFF0047AB), width: 1.5),
                 ),
               ),
             ),
           ),
-
-          // Session list
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -136,12 +133,9 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                 final allDocs = (snap.data?.docs ?? []).where((d) {
                   final data = d.data() as Map<String, dynamic>;
                   final status = data['status'] ?? '';
-                  if (status != 'upcoming' && status != 'active') {
-                    return false;
-                  }
+                  if (status != 'upcoming' && status != 'active') return false;
                   try {
-                    return DateTime.parse(data['dateTime'] ?? '')
-                        .isAfter(now);
+                    return DateTime.parse(data['dateTime'] ?? '').isAfter(now);
                   } catch (_) {
                     return false;
                   }
@@ -152,12 +146,10 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                     return aD.compareTo(bD);
                   });
 
-                // Pre-fetch tutor names for search
                 return FutureBuilder<void>(
                   future: Future.wait(
                     allDocs.map((doc) {
-                      final tutorId =
-                          (doc.data() as Map)['tutorId'] ?? '';
+                      final tutorId = (doc.data() as Map)['tutorId'] ?? '';
                       return tutorId.isNotEmpty
                           ? _getTutorName(tutorId)
                           : Future.value();
@@ -166,8 +158,7 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                   builder: (context, _) {
                     final sessions = allDocs.where((d) {
                       return _matchesSearch(
-                          d.data() as Map<String, dynamic>,
-                          _searchQuery);
+                          d.data() as Map<String, dynamic>, _searchQuery);
                     }).toList();
 
                     if (sessions.isEmpty) {
@@ -176,8 +167,7 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.search_off,
-                                size: 60,
-                                color: Colors.grey.shade300),
+                                size: 60, color: Colors.grey.shade300),
                             const SizedBox(height: 16),
                             Text(
                               _searchQuery.isNotEmpty
@@ -195,15 +185,12 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                     return ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: sessions.length,
-                      separatorBuilder: (_, __) =>
-                      const SizedBox(height: 14),
+                      separatorBuilder: (_, __) => const SizedBox(height: 14),
                       itemBuilder: (context, index) {
                         final doc = sessions[index];
-                        final d =
-                        doc.data() as Map<String, dynamic>;
+                        final d = doc.data() as Map<String, dynamic>;
                         final tutorId = d['tutorId'] ?? '';
-                        final cachedName =
-                            _tutorNameCache[tutorId] ?? '...';
+                        final cachedName = _tutorNameCache[tutorId] ?? '...';
 
                         return _SessionCard(
                           sessionId: doc.id,
@@ -211,12 +198,11 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
                           courseName: d['courseName'] ?? '',
                           tutorId: tutorId,
                           tutorName: cachedName,
-                          dateTime: _formatDateTime(
-                              d['dateTime'] ?? ''),
+                          dateTime: _formatDateTime(d['dateTime'] ?? ''),
+                          rawDateTime: d['dateTime'] ?? '',
                           room: d['room'] ?? '',
                           status: d['status'] ?? 'upcoming',
-                          currentStudents:
-                          d['enrolledCount'] ?? 0,
+                          currentStudents: d['enrolledCount'] ?? 0,
                           studentUid: uid,
                         );
                       },
@@ -232,7 +218,6 @@ class _StudentScheduleSessionState extends State<StudentScheduleSession> {
   }
 }
 
-
 class _SessionCard extends StatefulWidget {
   final String sessionId;
   final String courseCode;
@@ -240,6 +225,7 @@ class _SessionCard extends StatefulWidget {
   final String tutorId;
   final String tutorName;
   final String dateTime;
+  final String rawDateTime;
   final String room;
   final String status;
   final int currentStudents;
@@ -254,6 +240,7 @@ class _SessionCard extends StatefulWidget {
     required this.tutorId,
     required this.tutorName,
     required this.dateTime,
+    required this.rawDateTime,
     required this.room,
     required this.status,
     required this.currentStudents,
@@ -275,7 +262,7 @@ class _SessionCardState extends State<_SessionCard> {
 
     try {
       if (currentlyEnrolled) {
-        // Cancel reservation
+        // ── Cancel reservation ──────────────────────────────────────────
         final existing = await db
             .collection('enrollments')
             .where('studentId', isEqualTo: widget.studentUid)
@@ -287,10 +274,12 @@ class _SessionCardState extends State<_SessionCard> {
           await doc.reference.delete();
         }
 
-        // Decrement enrolled count
         await db.collection('sessions').doc(widget.sessionId).update({
           'enrolledCount': enrolledCount > 0 ? enrolledCount - 1 : 0,
         });
+
+        // ← YOUR ADDITION: cancel the scheduled notification
+        await NotificationService.cancelSessionReminder(widget.sessionId);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -301,7 +290,7 @@ class _SessionCardState extends State<_SessionCard> {
           );
         }
       } else {
-        // Reserve — check capacity first
+        // ── Reserve spot ────────────────────────────────────────────────
         if (enrolledCount >= _SessionCard.maxStudents) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -324,6 +313,14 @@ class _SessionCardState extends State<_SessionCard> {
         await db.collection('sessions').doc(widget.sessionId).update({
           'enrolledCount': enrolledCount + 1,
         });
+
+        // ← YOUR ADDITION: schedule a reminder notification
+        await NotificationService.scheduleSessionReminder(
+          sessionId: widget.sessionId,
+          courseCode: widget.courseCode,
+          room: widget.room,
+          sessionDateTime: DateTime.parse(widget.rawDateTime),
+        );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -351,7 +348,6 @@ class _SessionCardState extends State<_SessionCard> {
     final statusColor = isActive ? Colors.green : Colors.orange;
     final statusLabel = isActive ? 'Active' : 'Upcoming';
 
-    // Listen live to enrolled count + student's enrollment
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('enrollments')
@@ -361,8 +357,8 @@ class _SessionCardState extends State<_SessionCard> {
         final enrollments = snap.data?.docs ?? [];
         final enrolledCount = enrollments.length;
         final isFull = enrolledCount >= _SessionCard.maxStudents;
-        final isEnrolled = enrollments.any(
-                (d) => (d.data() as Map)['studentId'] == widget.studentUid);
+        final isEnrolled = enrollments
+            .any((d) => (d.data() as Map)['studentId'] == widget.studentUid);
 
         return Container(
           width: double.infinity,
@@ -381,7 +377,6 @@ class _SessionCardState extends State<_SessionCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Course + status badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -410,19 +405,14 @@ class _SessionCardState extends State<_SessionCard> {
                 ],
               ),
               const SizedBox(height: 10),
-
-              // Tutor
               Row(children: [
-                const Icon(Icons.person,
-                    size: 14, color: Colors.white70),
+                const Icon(Icons.person, size: 14, color: Colors.white70),
                 const SizedBox(width: 6),
                 Text(widget.tutorName,
                     style: const TextStyle(
                         fontSize: 13, color: Colors.white70)),
               ]),
               const SizedBox(height: 5),
-
-              // Date/time
               Row(children: [
                 const Icon(Icons.calendar_today,
                     size: 14, color: Colors.white70),
@@ -433,8 +423,6 @@ class _SessionCardState extends State<_SessionCard> {
                             fontSize: 13, color: Colors.white70))),
               ]),
               const SizedBox(height: 5),
-
-              // Room
               Row(children: [
                 const Icon(Icons.location_on,
                     size: 14, color: Colors.white70),
@@ -444,11 +432,8 @@ class _SessionCardState extends State<_SessionCard> {
                         fontSize: 13, color: Colors.white70)),
               ]),
               const SizedBox(height: 5),
-
-              // Capacity
               Row(children: [
-                const Icon(Icons.people,
-                    size: 14, color: Colors.white70),
+                const Icon(Icons.people, size: 14, color: Colors.white70),
                 const SizedBox(width: 6),
                 Text(
                   '$enrolledCount / ${_SessionCard.maxStudents} students',
@@ -480,8 +465,6 @@ class _SessionCardState extends State<_SessionCard> {
                 ],
               ]),
               const SizedBox(height: 12),
-
-              // Reserve / Cancel / Full button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

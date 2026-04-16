@@ -3,11 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/login_screen.dart';
+import 'services/notifications_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize Firebase (required for authentication and Firestore)
   await Firebase.initializeApp();
+
+  await NotificationService.initialize();
+
   runApp(const MyApp());
 }
 
